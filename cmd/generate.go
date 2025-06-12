@@ -1,40 +1,44 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
-*/
+// Package cmd implements the command-line interface for the secure secret manager.
+// This file contains the implementation of the 'generate' command which is used to
+// generate random passwords.
 package cmd
 
 import (
 	"fmt"
 
+	"github.com/kirinyoku/vlxck/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-// generateCmd represents the generate command
+// generateCmd represents the 'generate' command that allows users to generate random passwords.
+// It prompts the user for the password length and whether to include symbols and numbers.
+// If the password is successfully generated, it displays the generated password.
+//
+// The command requires the following flags:
+//   - length (-l): The desired length of the password
+//   - symbols (-s): Whether to include special characters (!@#$%^&*()-_=+)
+//   - numbers (-n): Whether to include digits (0123456789)
 var generateCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Generate a random password",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("generate called")
+		length, _ := cmd.Flags().GetInt("length")
+		symbols, _ := cmd.Flags().GetBool("symbols")
+		numbers, _ := cmd.Flags().GetBool("numbers")
+		password, err := utils.GeneratePassword(length, symbols, numbers)
+		if err != nil {
+			fmt.Println("Error generating password:", err)
+			return
+		}
+		fmt.Printf("Generated password: %s\n", password)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(generateCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// generateCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// generateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Define command flags with shorthand and descriptions
+	generateCmd.Flags().IntP("length", "l", 12, "Length of the password")
+	generateCmd.Flags().BoolP("symbols", "s", false, "Include symbols")
+	generateCmd.Flags().BoolP("numbers", "n", false, "Include numbers")
 }
