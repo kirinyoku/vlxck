@@ -1,34 +1,51 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
-*/
+// Package cmd implements the command-line interface for the secure command-line password manager.
+// This file contains the implementation of the root command which is used to execute the application.
 package cmd
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
 
+// getStorePath returns the path to the encrypted store file.
+func getStorePath() string {
+	homeDir, _ := os.UserHomeDir()
+	return filepath.Join(homeDir, ".vlxck", "store.dat")
+}
 
-
-// rootCmd represents the base command when called without any subcommands
+// rootCmd is the root command for the application.
 var rootCmd = &cobra.Command{
 	Use:   "vlxck",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "A secure command-line password manager for storing and managing sensitive data",
+	Long: `vlxck is a secure, lightweight password manager that helps you
+store and manage your sensitive information with strong encryption.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+Features:
+  • Secure storage of passwords, API keys, and other secrets
+  • End-to-end encryption using AES-256-GCM
+  • Password generation with customizable complexity
+  • Organized storage with categories
+  • Easy command-line interface
+  • No internet connection required
+
+Getting Started:
+  1. Add your first secret: 'vlxck add -n {service name} -v {password}'
+  2. Retrieve a secret: 'vlxck get -n {service name}'
+  3. List all secrets: 'vlxck list'
+  4. Generate a strong password: 'vlxck generate -l 16 -s -n'
+
+Security:
+  • All data is encrypted before being written to disk
+  • Master password is never stored
+  • Uses industry-standard encryption (AES-256-GCM with Argon2id key derivation)
+
+For more information about a specific command, use 'vlxck [command] --help'
+`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -37,15 +54,5 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.vlxck.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-
