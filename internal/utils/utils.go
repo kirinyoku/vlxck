@@ -6,7 +6,12 @@ package utils
 import (
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"math/big"
+	"os"
+	"strings"
+
+	"golang.org/x/term"
 )
 
 // GeneratePassword generates a random password of the specified length.
@@ -41,4 +46,19 @@ func GeneratePassword(length int, useSymbols, useNumbers bool) (string, error) {
 		result[i] = chars[idx.Int64()]
 	}
 	return string(result), nil
+}
+
+// PromptForPassword prompts the user for a password and returns it as a string.
+// It reads the password from the standard input without echoing it to the screen.
+//
+// Parameters:
+//   - prompt: The prompt message to display to the user
+//
+// Returns:
+//   - string: The password entered by the user
+func PromptForPassword(prompt string) string {
+	fmt.Print(prompt)
+	password, _ := term.ReadPassword(int(os.Stdin.Fd()))
+	fmt.Println()
+	return strings.TrimSpace(string(password))
 }
