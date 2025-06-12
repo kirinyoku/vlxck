@@ -1,40 +1,47 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
-*/
+// Package cmd implements the command-line interface for the secure secret manager.
+// This file contains the implementation of the 'change-master' command which is used to
+// change the master password for the encrypted store.
 package cmd
 
 import (
 	"fmt"
 
+	"github.com/kirinyoku/vlxck/internal/store"
+	"github.com/kirinyoku/vlxck/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-// changeMasterCmd represents the changeMaster command
+// changeMasterCmd represents the 'change-master' command that allows users to change the master password for the encrypted store.
+// It prompts the user for the current master password and the new master password.
+// If the new master password is successfully changed, it displays a message indicating that the master password was changed successfully.
+//
+// The command requires the following flags:
+//   - filePath (-f): The path to the encrypted store file
 var changeMasterCmd = &cobra.Command{
-	Use:   "changeMaster",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "change-master",
+	Short: "Change the master password",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("changeMaster called")
+		filePath := getStorePath()
+		oldPassword := utils.PromptForPassword("Enter current master password: ")
+		s, err := store.LoadStore(filePath, oldPassword)
+		if err != nil {
+			fmt.Println("Error loading store:", err)
+			return
+		}
+		newPassword := utils.PromptForPassword("Enter new master password: ")
+		confirmPassword := utils.PromptForPassword("Confirm new master password: ")
+		if newPassword != confirmPassword {
+			fmt.Println("Passwords do not match. Exiting.")
+			return
+		}
+		if err := store.SaveStore(filePath, newPassword, s); err != nil {
+			fmt.Println("Error saving store:", err)
+			return
+		}
+		fmt.Println("Master password changed successfully.")
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(changeMasterCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// changeMasterCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// changeMasterCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
