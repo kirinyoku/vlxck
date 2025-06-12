@@ -1,40 +1,55 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
-*/
+// Package cmd implements the command-line interface for the secure secret manager.
+// This file contains the implementation of the 'delete' command which is used to
+// delete secrets from the encrypted store.
 package cmd
 
 import (
 	"fmt"
 
+	"github.com/kirinyoku/vlxck/internal/store"
+	"github.com/kirinyoku/vlxck/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-// deleteCmd represents the delete command
+// deleteCmd represents the 'delete' command that allows users to delete secrets from the store.
+// It prompts the user for the secret name and deletes the corresponding secret from the store.
+// If the secret is not found, it displays a message indicating that the secret was not found.
+//
+// The command requires the following flags:
+//   - name (-n): The name/identifier of the secret (required)
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Delete a secret by name",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("delete called")
+		filePath := getStorePath()
+		password := utils.PromptForPassword("Enter master password: ")
+		s, err := store.LoadStore(filePath, password)
+		if err != nil {
+			fmt.Println("Error loading store:", err)
+			return
+		}
+		name, _ := cmd.Flags().GetString("name")
+		for i, secret := range s.Secrets {
+			if secret.Name == name {
+				s.Secrets = append(s.Secrets[:i], s.Secrets[i+1:]...)
+				if err := store.SaveStore(filePath, password, s); err != nil {
+					fmt.Println("Error saving store:", err)
+					return
+				}
+				fmt.Println("Secret deleted successfully.")
+				return
+			}
+		}
+		fmt.Println("Secret not found.")
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(deleteCmd)
 
-	// Here you will define your flags and configuration settings.
+	// Define command flags with shorthand and descriptions
+	deleteCmd.Flags().StringP("name", "n", "", "Name of the secret (required)")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// deleteCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// deleteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Mark required flags
+	deleteCmd.MarkFlagRequired("name")
 }
