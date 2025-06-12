@@ -1,40 +1,50 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
-*/
+// Package cmd implements the command-line interface for the secure secret manager.
+// This file contains the implementation of the 'get' command which is used to
+// retrieve secrets from the encrypted store.
 package cmd
 
 import (
 	"fmt"
 
+	"github.com/kirinyoku/vlxck/internal/store"
+	"github.com/kirinyoku/vlxck/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-// getCmd represents the get command
+// getCmd represents the 'get' command that allows users to retrieve secrets from the store.
+// It prompts the user for the secret name and displays the corresponding secret value.
+// If the secret is not found, it displays a message indicating that the secret was not found.
+//
+// The command requires the following flags:
+//   - name (-n): The name/identifier of the secret (required)
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Get a secret by name",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("get called")
+		filePath := getStorePath()
+		password := utils.PromptForPassword("Enter master password: ")
+		s, err := store.LoadStore(filePath, password)
+		if err != nil {
+			fmt.Println("Error loading store:", err)
+			return
+		}
+		name, _ := cmd.Flags().GetString("name")
+		for _, secret := range s.Secrets {
+			if secret.Name == name {
+				fmt.Printf("Value: %s\n", secret.Value)
+				return
+			}
+		}
+		fmt.Println("Secret not found.")
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(getCmd)
 
-	// Here you will define your flags and configuration settings.
+	// Define command flags with shorthand and descriptions
+	getCmd.Flags().StringP("name", "n", "", "Name of the secret (required)")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// getCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Mark required flags
+	getCmd.MarkFlagRequired("name")
 }
