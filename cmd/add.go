@@ -55,6 +55,26 @@ var addCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		value, _ := cmd.Flags().GetString("value")
 		category, _ := cmd.Flags().GetString("category")
+		generate, _ := cmd.Flags().GetBool("generate")
+
+		if value == "" && !generate {
+			fmt.Println("Error: either --value or --generate must be specified")
+			return
+		}
+
+		if value != "" && generate {
+			fmt.Println("Warning: --value takes precedence over --generate")
+			generate = false
+		}
+
+		if generate {
+			value, err = utils.GeneratePassword(16, true, true)
+			if err != nil {
+				fmt.Println("Error generating password:", err)
+				return
+			}
+		}
+
 		newSecret := store.Secret{
 			Name:      name,
 			Value:     value,
@@ -76,9 +96,9 @@ func init() {
 	// Define command flags with shorthand and descriptions
 	addCmd.Flags().StringP("name", "n", "", "Name/identifier of the secret (required)")
 	addCmd.Flags().StringP("value", "v", "", "Secret value to store (required)")
-	addCmd.Flags().StringP("category", "c", "", "Optional category for organizing secrets")
+	addCmd.Flags().StringP("category", "c", "-", "Optional category for organizing secrets")
+	addCmd.Flags().BoolP("generate", "g", false, "Generate a random password for the secret")
 
 	// Mark required flags
 	addCmd.MarkFlagRequired("name")
-	addCmd.MarkFlagRequired("value")
 }
