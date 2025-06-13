@@ -57,13 +57,20 @@ You'll be prompted to set a master password. This password will be required to a
 ### Add a New Secret
 
 ```bash
+# Add a secret with a specific value
 vlxck add -n example.com -v yourpassword -c websites
+
+# Or generate a random password
+vlxck add -n example.com -g -c websites
 ```
 
 Options:
 - `-n, --name`: Name/identifier for the secret (required)
-- `-v, --value`: The secret value (required)
+- `-v, --value`: The secret value (either this or --generate is required)
+- `-g, --generate`: Generate a random password for the secret
 - `-c, --category`: Category for organization (optional)
+
+Note: If both `--value` and `--generate` are specified, `--value` takes precedence.
 
 ### Retrieve a Secret
 
