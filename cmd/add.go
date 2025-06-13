@@ -67,6 +67,13 @@ var addCmd = &cobra.Command{
 			generate = false
 		}
 
+		for _, secret := range s.Secrets {
+			if secret.Name == name {
+				fmt.Printf("Error: secret with name '%s' already exists\n", name)
+				return
+			}
+		}
+
 		if generate {
 			value, err = utils.GeneratePassword(16, true, true)
 			if err != nil {
