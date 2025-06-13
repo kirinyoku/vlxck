@@ -33,8 +33,8 @@ var updateCmd = &cobra.Command{
 		category, _ := cmd.Flags().GetString("category")
 		generate, _ := cmd.Flags().GetBool("generate")
 
-		if value == "" && !generate {
-			fmt.Println("Error: either --value or --generate must be specified")
+		if value == "" && category == "-" && !generate {
+			fmt.Println("Error: either --value, --category or --generate must be specified")
 			return
 		}
 
