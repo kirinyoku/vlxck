@@ -29,9 +29,9 @@ var listCmd = &cobra.Command{
 			return
 		}
 		category, _ := cmd.Flags().GetString("category")
-		for _, secret := range s.Secrets {
+		for i, secret := range s.Secrets {
 			if category == "" || secret.Category == category {
-				fmt.Printf("Name: %s, Category: %s\n", secret.Name, secret.Category)
+				fmt.Printf("%d. Name: %s, Category: %s\n", i+1, secret.Name, secret.Category)
 			}
 		}
 	},
