@@ -72,6 +72,30 @@ Options:
 
 Note: If both `--value` and `--generate` are specified, `--value` takes precedence.
 
+### Update an Existing Secret
+
+```bash
+# Update a secret with a new value
+vlxck update -n example.com -v newpassword
+
+# Update just the category
+vlxck update -n example.com -c social-media
+
+# Generate a new random password for the secret
+vlxck update -n example.com -g
+
+# Update both value and category
+vlxck update -n example.com -v newpassword -c work
+```
+
+Options:
+- `-n, --name`: Name/identifier of the secret to update (required)
+- `-v, --value`: New secret value (either this or --generate is required)
+- `-g, --generate`: Generate a new random password for the secret
+- `-c, --category`: Update the category (optional)
+
+Note: If both `--value` and `--generate` are specified, `--value` takes precedence.
+
 ### Retrieve a Secret
 
 ```bash
