@@ -19,8 +19,9 @@ import (
 //
 // The command requires the following flags:
 //   - name (-n): The name/identifier of the secret (required)
-//   - value (-v): The secret value to store (required)
+//   - value (-v): The secret value to store
 //   - category (-c): Optional category for organizing secrets
+//   - generate (-g): Generate a random password for the secret
 var addCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Add a new secret to the secure store",
