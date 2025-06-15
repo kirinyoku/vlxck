@@ -1,3 +1,6 @@
+// Package cmd implements the command-line interface for the secure secret manager.
+// This file contains the implementation of the 'update' command which is used to
+// update existing secrets in the encrypted store.
 package cmd
 
 import (
