@@ -4,6 +4,7 @@
 package utils
 
 import (
+	"bufio"
 	"crypto/rand"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/kirinyoku/vlxck/internal/store"
 	"golang.org/x/term"
 )
 
@@ -61,4 +63,32 @@ func PromptForPassword(prompt string) string {
 	password, _ := term.ReadPassword(int(os.Stdin.Fd()))
 	fmt.Println()
 	return strings.TrimSpace(string(password))
+}
+
+// PromptForConflictChoice prompts the user for a choice when a conflict is detected between a local secret and an imported secret.
+// It displays the details of both secrets and allows the user to choose how to resolve the conflict.
+//
+// Parameters:
+//   - localSecret: The local secret with the conflict
+//   - importedSecret: The imported secret with the conflict
+//
+// Returns:
+//   - string: The user's choice ('l' for local, 'i' for imported, 's' for skip)
+func PromptForConflictChoice(localSecret, importedSecret store.Secret) string {
+	fmt.Printf("Conflict detected for secret name '%s':\n", localSecret.Name)
+	fmt.Printf("Local secret: Value=%s, Category=%s\n", localSecret.Value, localSecret.Category)
+	fmt.Printf("Imported secret: Value=%s, Category=%s\n", importedSecret.Value, importedSecret.Category)
+	fmt.Printf("Choose action: [l] keep local, [i] use imported, [s] skip: ")
+
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		choice := strings.ToLower(strings.TrimSpace(scanner.Text()))
+		if choice == "l" || choice == "i" || choice == "s" {
+			return choice
+		}
+		fmt.Print("Invalid choice. Please enter [l], [i], or [s]: ")
+	}
+	fmt.Println("Error reading choice. Exiting.")
+	os.Exit(1)
+	return ""
 }
