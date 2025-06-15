@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/atotto/clipboard"
 	"github.com/kirinyoku/vlxck/internal/store"
 	"golang.org/x/term"
 )
@@ -91,4 +92,18 @@ func PromptForConflictChoice(localSecret, importedSecret store.Secret) string {
 	fmt.Println("Error reading choice. Exiting.")
 	os.Exit(1)
 	return ""
+}
+
+// CopyToClipboard copies the specified text to the clipboard.
+//
+// Parameters:
+//   - text: The text to copy to the clipboard
+//
+// Returns:
+//   - error: Any error that occurred during the clipboard operation
+func CopyToClipboard(text string) error {
+	if err := clipboard.WriteAll(text); err != nil {
+		return fmt.Errorf("failed to copy to clipboard: %v", err)
+	}
+	return nil
 }

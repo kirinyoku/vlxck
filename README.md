@@ -123,9 +123,16 @@ Note: If both `--value` and `--generate` are specified, `--value` takes preceden
 
 ### Retrieve a Secret
 
+Retrieve a secret and automatically copy it to your clipboard:
+
 ```bash
 vlxck get -n example.com
 ```
+
+Options:
+- `-n, --name`: Name/identifier of the secret to retrieve (required)
+
+The secret value will be copied to your clipboard automatically. This helps prevent accidentally displaying sensitive information in your terminal history or on screen.
 
 ### List All Secrets
 

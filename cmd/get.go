@@ -12,7 +12,7 @@ import (
 )
 
 // getCmd represents the 'get' command that allows users to retrieve secrets from the store.
-// It prompts the user for the secret name and displays the corresponding secret value.
+// It prompts the user for the secret name and copies the corresponding secret value to the clipboard.
 // If the secret is not found, it displays a message indicating that the secret was not found.
 //
 // The command requires the following flags:
@@ -31,7 +31,11 @@ var getCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		for _, secret := range s.Secrets {
 			if secret.Name == name {
-				fmt.Printf("Value: %s\n", secret.Value)
+				if err := utils.CopyToClipboard(secret.Value); err != nil {
+					fmt.Printf("Value: %s (clipboard error: %v)\n", secret.Value, err)
+					return
+				}
+				fmt.Println("Secret copied to clipboard.")
 				return
 			}
 		}
