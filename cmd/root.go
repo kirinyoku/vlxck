@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const Version = "0.5.1" // Version of the application
+
 // getStorePath returns the path to the encrypted store file.
 func getStorePath() string {
 	homeDir, _ := os.UserHomeDir()
@@ -54,5 +56,7 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.Version = Version
+	rootCmd.Flags().BoolP("version", "v", false, "Print the version number")
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
