@@ -55,11 +55,18 @@ var updateCmd = &cobra.Command{
 					s.Secrets[i].Category = category
 				}
 				if generate {
-					s.Secrets[i].Value, err = utils.GeneratePassword(16, true, true)
+					value, err = utils.GeneratePassword(16, true, true)
 					if err != nil {
 						fmt.Println("Error generating password:", err)
 						return
 					}
+
+					s.Secrets[i].Value = value
+
+					if err = utils.CopyToClipboard(value); err != nil {
+						fmt.Println("Error copying password to clipboard:", err)
+					}
+					fmt.Println("Generated password copied to clipboard.")
 				}
 				if err := store.SaveStore(filePath, password, s); err != nil {
 					fmt.Println("Error saving store:", err)

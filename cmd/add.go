@@ -81,6 +81,11 @@ var addCmd = &cobra.Command{
 				fmt.Println("Error generating password:", err)
 				return
 			}
+
+			if err = utils.CopyToClipboard(value); err != nil {
+				fmt.Println("Error copying password to clipboard:", err)
+			}
+			fmt.Println("Generated password copied to clipboard.")
 		}
 
 		newSecret := store.Secret{
