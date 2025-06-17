@@ -11,15 +11,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// getCmd represents the 'get' command that allows users to retrieve secrets from the store.
-// It prompts the user for the secret name and copies the corresponding secret value to the clipboard.
-// If the secret is not found, it displays a message indicating that the secret was not found.
-//
-// The command requires the following flags:
-//   - name (-n): The name/identifier of the secret (required)
+// getCmd represents the get command
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "Get a secret by name",
+	Short: "Retrieve a secret from the store",
+	Long: `Retrieve a secret from the store and copy it to the clipboard.
+
+In interactive mode, you can select the secret from a list.
+In non-interactive mode, you must specify the secret name.
+
+Examples:
+  # Interactive mode
+  vlxck get -i
+
+  # Non-interactive mode
+  vlxck get -n example.com`,
+
 	Run: func(cmd *cobra.Command, args []string) {
 		filePath := getStorePath()
 		password := utils.PromptForPassword("Enter master password: ")
@@ -28,27 +35,88 @@ var getCmd = &cobra.Command{
 			fmt.Println("Error loading store:", err)
 			return
 		}
-		name, _ := cmd.Flags().GetString("name")
-		for _, secret := range s.Secrets {
-			if secret.Name == name {
-				if err := utils.CopyToClipboard(secret.Value); err != nil {
-					fmt.Printf("Value: %s (clipboard error: %v)\n", secret.Value, err)
-					return
-				}
-				fmt.Println("Secret copied to clipboard.")
-				return
-			}
+
+		// Check for interactive mode
+		interactive, _ := cmd.Flags().GetBool("interactive")
+		if interactive {
+			getInteractive(s)
+			return
 		}
-		fmt.Println("Secret not found.")
+
+		// Non-interactive mode
+		getNonInteractive(cmd, s)
 	},
+}
+
+// getInteractive handles the interactive get flow
+func getInteractive(s *store.Store) {
+	if len(s.Secrets) == 0 {
+		fmt.Println("No secrets found.")
+		return
+	}
+
+	// Create a list of secret names for selection
+	secretNames := make([]string, 0, len(s.Secrets))
+	for _, secret := range s.Secrets {
+		secretNames = append(secretNames, secret.Name)
+	}
+
+	// Prompt user to select a secret
+	selectedName, err := utils.PromptForSelect("Select secret to retrieve", secretNames)
+	if err != nil {
+		fmt.Println("Error selecting secret:", err)
+		return
+	}
+
+	// Find and copy the selected secret
+	for _, secret := range s.Secrets {
+		if secret.Name == selectedName {
+			copySecretToClipboard(secret)
+			return
+		}
+	}
+}
+
+// getNonInteractive handles the non-interactive get flow
+func getNonInteractive(cmd *cobra.Command, s *store.Store) {
+	name, _ := cmd.Flags().GetString("name")
+	if name == "" {
+		fmt.Println("Error: secret name is required in non-interactive mode")
+		return
+	}
+
+	for _, secret := range s.Secrets {
+		if secret.Name == name {
+			copySecretToClipboard(secret)
+			return
+		}
+	}
+	fmt.Printf("Secret '%s' not found.\n", name)
+}
+
+// copySecretToClipboard copies the secret value to clipboard and provides feedback
+func copySecretToClipboard(secret store.Secret) {
+	if err := utils.CopyToClipboard(secret.Value); err != nil {
+		fmt.Printf("Value: %s (clipboard error: %v)\n", secret.Value, err)
+	} else {
+		fmt.Printf("Secret '%s' copied to clipboard.\n", secret.Name)
+	}
 }
 
 func init() {
 	rootCmd.AddCommand(getCmd)
 
 	// Define command flags with shorthand and descriptions
-	getCmd.Flags().StringP("name", "n", "", "Name of the secret (required)")
+	getCmd.Flags().StringP("name", "n", "", "Name of the secret (required in non-interactive mode)")
+	getCmd.Flags().BoolP("interactive", "i", false, "Use interactive mode to select from a list")
 
-	// Mark required flags
-	getCmd.MarkFlagRequired("name")
+	// Mark name as required only in non-interactive mode
+	getCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		interactive, _ := cmd.Flags().GetBool("interactive")
+		name, _ := cmd.Flags().GetString("name")
+		if !interactive && name == "" {
+			return fmt.Errorf("either --name or --interactive flag is required")
+		}
+		return nil
+	}
 }

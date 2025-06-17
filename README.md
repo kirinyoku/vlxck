@@ -85,17 +85,31 @@ You'll be prompted to set a master password. This password will be required to a
 # Add a secret with a specific value
 vlxck add -n example.com -v yourpassword -c websites
 
-# Or generate a random password
+# Generate a random password with default settings (16 chars, letters only)
 vlxck add -n example.com -g -c websites
+
+# Generate a custom password (24 chars with symbols and digits)
+vlxck add -n example.com -gdsl 24 -c websites
+
+# Interactive mode (guided prompts)
+vlxck add -i
 ```
 
 Options:
-- `-n, --name`: Name/identifier for the secret (required)
-- `-v, --value`: The secret value (either this or --generate is required)
-- `-g, --generate`: Generate a random password for the secret
+- `-n, --name`: Name/identifier for the secret (required in non-interactive mode)
+- `-v, --value`: The secret value (either this or --generate is required in non-interactive mode)
+- `-g, --generate`: Generate a random password (overrides -v if both specified)
+- `-l, --length`: Length of the generated password (default: 16)
+- `-s, --symbols`: Include special characters in generated password
+- `-d, --digits`: Include digits in generated password
 - `-c, --category`: Category for organization (optional)
+- `-i, --interactive`: Use interactive mode (overrides other flags)
 
-Note: If both `--value` and `--generate` are specified, `--value` takes precedence.
+Password Generation Examples:
+- `-g`: 16-character letters-only password
+- `-gsd`: 16-character password with symbols and digits
+- `-gdsl 24`: 24-character password with digits and symbols
+- `-gsl 20`: 20-character password with symbols (no digits)
 
 ### Update an Existing Secret
 
@@ -111,26 +125,36 @@ vlxck update -n example.com -g
 
 # Update both value and category
 vlxck update -n example.com -v newpassword -c work
+
+# Interactive mode (guided prompts)
+vlxck update -i
 ```
 
 Options:
-- `-n, --name`: Name/identifier of the secret to update (required)
-- `-v, --value`: New secret value (either this or --generate is required)
+- `-n, --name`: Name/identifier of the secret to update (required in non-interactive mode)
+- `-v, --value`: New secret value (either this or --generate is required in non-interactive mode)
 - `-g, --generate`: Generate a new random password for the secret
+- `-l, --length`: Length of the generated password (default: 16)
+- `-s, --symbols`: Include special characters in generated password
+- `-d, --digits`: Include digits in generated password
 - `-c, --category`: Update the category (optional)
-
-Note: If both `--value` and `--generate` are specified, `--value` takes precedence.
+- `-i, --interactive`: Use interactive mode (overrides other flags)
 
 ### Retrieve a Secret
 
 Retrieve a secret and automatically copy it to your clipboard:
 
 ```bash
+# Interactive mode - select from a list of secrets
+vlxck get -i
+
+# Non-interactive mode - specify the secret name
 vlxck get -n example.com
 ```
 
 Options:
-- `-n, --name`: Name/identifier of the secret to retrieve (required)
+- `-n, --name`: Name/identifier of the secret to retrieve (required in non-interactive mode)
+- `-i, --interactive`: Use interactive mode to select from a list of secrets
 
 The secret value will be copied to your clipboard automatically. This helps prevent accidentally displaying sensitive information in your terminal history or on screen.
 
@@ -158,9 +182,25 @@ Options:
 
 ### Delete a Secret
 
+Delete a secret from the store by its name or through interactive selection:
+
 ```bash
+# Interactive mode - select secret to delete from a list
+vlxck delete -i
+
+# Non-interactive mode - specify the secret name
 vlxck delete -n example.com
 ```
+
+Options:
+- `-n, --name`: Name of the secret to delete (required in non-interactive mode)
+- `-i, --interactive`: Use interactive mode to select from a list of secrets
+
+Interactive Mode:
+When using interactive mode (`-i`), you'll be guided through the deletion process:
+1. Select which secret to delete from a list
+2. Confirm the deletion to prevent accidental data loss
+3. The secret will be permanently removed if confirmed
 
 ### Change Master Password
 

@@ -24,14 +24,6 @@ var rootCmd = &cobra.Command{
 	Long: `vlxck is a secure, lightweight password manager that helps you
 store and manage your sensitive information with strong encryption.
 
-Features:
-  • Secure storage of passwords, API keys, and other secrets
-  • End-to-end encryption using AES-256-GCM
-  • Password generation with customizable complexity
-  • Organized storage with categories
-  • Easy command-line interface
-  • No internet connection required
-
 Getting Started:
   1. Add your first secret: 'vlxck add -n {service name} -v {password}'
   2. Retrieve a secret: 'vlxck get -n {service name}'
