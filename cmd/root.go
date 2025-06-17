@@ -3,18 +3,55 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
+	"time"
 
+	"github.com/kirinyoku/vlxck/internal/cache"
+	"github.com/kirinyoku/vlxck/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-const Version = "0.5.1" // Version of the application
+const (
+	Version      = "0.6.1"         // Version of the application
+	cacheTimeout = 5 * time.Minute // Fixed 5-minute cache timeout
+)
 
 // getStorePath returns the path to the encrypted store file.
 func getStorePath() string {
 	homeDir, _ := os.UserHomeDir()
 	return filepath.Join(homeDir, ".vlxck", "store.dat")
+}
+
+// getPassword retrieves the password from cache or prompts the user
+// The password will be cached for 5 minutes after successful verification
+// by the caller using cacheVerifiedPassword.
+func getPassword(cacheOnSuccess bool) (string, error) {
+	// Try to get password from cache
+	if !cacheOnSuccess {
+		password, err := cache.GetMasterPassword()
+		if err != nil {
+			// Log but don't fail - we'll prompt for password
+			fmt.Fprintf(os.Stderr, "Warning: Failed to read password cache: %v\n", err)
+		} else if password != "" {
+			return password, nil
+		}
+	}
+
+	// Not in cache or cache disabled, prompt user
+	password := utils.PromptForPassword("Enter master password: ")
+	return password, nil
+}
+
+// cacheVerifiedPassword caches the password for 5 minutes
+func cacheVerifiedPassword(password string) {
+	if err := cache.SetMasterPassword(password, cacheTimeout); err != nil {
+		// Log but don't fail - the password was still obtained
+		fmt.Fprintf(os.Stderr, "Warning: Failed to cache password: %v\n", err)
+	}
 }
 
 // rootCmd is the root command for the application.
@@ -49,6 +86,18 @@ func Execute() {
 
 func init() {
 	rootCmd.Version = Version
-	rootCmd.Flags().BoolP("version", "v", false, "Print the version number")
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().BoolP("version", "v", false, "Print the version number")
+	rootCmd.PersistentFlags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	// Clear the cache on application exit
+	// This ensures we don't leave sensitive data in the cache if the program crashes
+	go func() {
+		// This will run when the program exits
+		// We use a channel to wait for interrupt signals
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+		<-c
+		cache.ClearMasterPassword()
+		os.Exit(0)
+	}()
 }

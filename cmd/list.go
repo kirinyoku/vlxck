@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/kirinyoku/vlxck/internal/store"
-	"github.com/kirinyoku/vlxck/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -22,8 +21,16 @@ var listCmd = &cobra.Command{
 	Short: "List all secrets",
 	Run: func(cmd *cobra.Command, args []string) {
 		filePath := getStorePath()
-		password := utils.PromptForPassword("Enter master password: ")
+		password, err := getPassword(false)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
 		s, err := store.LoadStore(filePath, password)
+		if err == nil {
+			// Only cache the password if it was successfully used
+			cacheVerifiedPassword(password)
+		}
 		if err != nil {
 			fmt.Println("Error loading store:", err)
 			return

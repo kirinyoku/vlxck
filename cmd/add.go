@@ -53,11 +53,19 @@ Examples:
 		filePath := getStorePath()
 		interactive, _ := cmd.Flags().GetBool("interactive")
 
-		// Get password first to handle store initialization if needed
-		password := utils.PromptForPassword("Enter master password: ")
+		// Get master password
+		password, err := getPassword(false)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
 
 		// Load or initialize the store
 		s, err := store.LoadStore(filePath, password)
+		if err == nil {
+			// Only cache the password if it was successfully used
+			cacheVerifiedPassword(password)
+		}
 		if err != nil {
 			if os.IsNotExist(err) {
 				if err := store.InitializeStore(filePath, password); err != nil {
@@ -193,7 +201,7 @@ func init() {
 
 	// Core flags
 	addCmd.Flags().StringP("name", "n", "", "Name of the secret (required in non-interactive mode)")
-	addCmd.Flags().StringP("value", "v", "", "Value of the secret (or use -g to generate)")
+	addCmd.Flags().StringP("value", "V", "", "Value of the secret (or use -g to generate)")
 	addCmd.Flags().StringP("category", "c", "", "Category for organizing secrets")
 
 	// Password generation flags

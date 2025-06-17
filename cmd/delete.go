@@ -25,8 +25,16 @@ Examples:
   vlxck delete -n example.com`,
 	Run: func(cmd *cobra.Command, args []string) {
 		filePath := getStorePath()
-		password := utils.PromptForPassword("Enter master password: ")
+		password, err := getPassword(false)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
 		s, err := store.LoadStore(filePath, password)
+		if err == nil {
+			// Only cache the password if it was successfully used
+			cacheVerifiedPassword(password)
+		}
 		if err != nil {
 			fmt.Println("Error loading store:", err)
 			return

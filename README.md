@@ -72,7 +72,7 @@ go install github.com/kirinyoku/vlxck@latest
 When you run your first command, vlxck will automatically create a new encrypted store:
 
 ```bash
-vlxck add -n example.com -v yourpassword
+vlxck add -n example.com -V yourpassword
 ```
 
 You'll be prompted to set a master password. This password will be required to access your secrets.
@@ -83,7 +83,7 @@ You'll be prompted to set a master password. This password will be required to a
 
 ```bash
 # Add a secret with a specific value
-vlxck add -n example.com -v yourpassword -c websites
+vlxck add -n example.com -V yourpassword -c websites
 
 # Generate a random password with default settings (16 chars, letters only)
 vlxck add -n example.com -g -c websites
@@ -97,8 +97,8 @@ vlxck add -i
 
 Options:
 - `-n, --name`: Name/identifier for the secret (required in non-interactive mode)
-- `-v, --value`: The secret value (either this or --generate is required in non-interactive mode)
-- `-g, --generate`: Generate a random password (overrides -v if both specified)
+- `-V, --value`: The secret value (either this or --generate is required in non-interactive mode)
+- `-g, --generate`: Generate a random password (overrides -V if both specified)
 - `-l, --length`: Length of the generated password (default: 16)
 - `-s, --symbols`: Include special characters in generated password
 - `-d, --digits`: Include digits in generated password
@@ -115,7 +115,7 @@ Password Generation Examples:
 
 ```bash
 # Update a secret with a new value
-vlxck update -n example.com -v newpassword
+vlxck update -n example.com -V newpassword
 
 # Update just the category
 vlxck update -n example.com -c social-media
@@ -124,7 +124,7 @@ vlxck update -n example.com -c social-media
 vlxck update -n example.com -g
 
 # Update both value and category
-vlxck update -n example.com -v newpassword -c work
+vlxck update -n example.com -V newpassword -c work
 
 # Interactive mode (guided prompts)
 vlxck update -i
@@ -132,7 +132,7 @@ vlxck update -i
 
 Options:
 - `-n, --name`: Name/identifier of the secret to update (required in non-interactive mode)
-- `-v, --value`: New secret value (either this or --generate is required in non-interactive mode)
+- `-V, --value`: New secret value (either this or --generate is required in non-interactive mode)
 - `-g, --generate`: Generate a new random password for the secret
 - `-l, --length`: Length of the generated password (default: 16)
 - `-s, --symbols`: Include special characters in generated password
@@ -260,9 +260,22 @@ Options:
 ## Security
 
 - All data is encrypted using AES-256-GCM
-- Master password is never stored
 - Uses Argon2id for key derivation
 - Encrypted data is stored in `~/.vlxck/store.dat`
+
+### Password Caching
+
+vlxck caches your master password in memory for 5 minutes after successful verification to improve usability. This means you won't need to re-enter your password for subsequent commands within this time window.
+
+- The password is stored securely in an encrypted cache file
+- The cache is automatically cleared after 5 minutes
+- You can clear the cache immediately by pressing Ctrl+C or waiting for the timeout
+- The cache is never written to disk in plaintext
+
+For maximum security, the cache is also cleared when:
+- You change your master password
+- The program is interrupted
+- The system is shut down or restarted
 
 ## License
 

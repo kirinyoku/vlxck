@@ -5,7 +5,9 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/kirinyoku/vlxck/internal/cache"
 	"github.com/kirinyoku/vlxck/internal/store"
 	"github.com/kirinyoku/vlxck/internal/utils"
 	"github.com/spf13/cobra"
@@ -22,8 +24,16 @@ var changeMasterCmd = &cobra.Command{
 	Short: "Change the master password",
 	Run: func(cmd *cobra.Command, args []string) {
 		filePath := getStorePath()
-		oldPassword := utils.PromptForPassword("Enter current master password: ")
+		oldPassword, err := getPassword(false)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
 		s, err := store.LoadStore(filePath, oldPassword)
+		if err == nil {
+			// Only cache the password if it was successfully used
+			cacheVerifiedPassword(oldPassword)
+		}
 		if err != nil {
 			fmt.Println("Error loading store:", err)
 			return
@@ -37,6 +47,10 @@ var changeMasterCmd = &cobra.Command{
 		if err := store.SaveStore(filePath, newPassword, s); err != nil {
 			fmt.Println("Error saving store:", err)
 			return
+		}
+		// Clear the cached password since it's been changed
+		if err := cache.ClearMasterPassword(); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to clear password cache: %v\n", err)
 		}
 		fmt.Println("Master password changed successfully.")
 	},

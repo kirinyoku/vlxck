@@ -33,7 +33,12 @@ var importCmd = &cobra.Command{
 		var importPassword string
 
 		if useStorePassword {
-			importPassword = utils.PromptForPassword("Enter master password: ")
+			password, err := getPassword(false)
+			if err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+			importPassword = password
 		} else {
 			importPassword = utils.PromptForPassword("Enter import file password: ")
 		}
@@ -47,7 +52,12 @@ var importCmd = &cobra.Command{
 		if merge {
 			storePassword := importPassword
 			if !useStorePassword {
-				storePassword = utils.PromptForPassword("Enter master password for store: ")
+				password, err := getPassword(false)
+				if err != nil {
+					fmt.Println("Error:", err)
+					return
+				}
+				storePassword = password
 			}
 			currentStore, err := store.LoadStore(filePath, storePassword)
 			if err != nil {
@@ -108,10 +118,12 @@ var importCmd = &cobra.Command{
 			}
 
 			currentStore.Secrets = mergedSecrets
-			if err := store.SaveStore(filePath, storePassword, currentStore); err != nil {
+			if err := store.SaveStore(filePath, importPassword, currentStore); err != nil {
 				fmt.Println("Error saving store:", err)
 				return
 			}
+			// Cache the password if it was successfully used
+			cacheVerifiedPassword(importPassword)
 
 			fmt.Printf("Successfully merged %d secrets (%d overwritten, %d skipped) from %s\n", importedCount, overwrittenCount, skippedCount, importPath)
 		} else {
