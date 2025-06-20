@@ -22,6 +22,10 @@ vlxck is a secure, lightweight command-line password manager that helps you stor
   - [Change Master Password](#change-master-password)
   - [Export Your Secrets](#export-your-secrets)
   - [Import Secrets](#import-secrets)
+  - [Backup and Restore](#backup-and-restore)
+    - [Create a Backup](#create-a-backup)
+    - [List Available Backups](#list-available-backups)
+    - [Restore from Backup](#restore-from-backup)
 - [Security](#security)
 - [License](#license)
 - [Contributing](#contributing)
@@ -33,10 +37,12 @@ vlxck is a secure, lightweight command-line password manager that helps you stor
 - 🔄 **Password Generation**: Create strong, customizable passwords
 - 📂 **Organization**: Categorize and manage secrets efficiently
 - 🔄 **Seamless Updates**: Modify existing secrets with ease
-- 💾 **Backup & Restore**: Export and import your encrypted store
+- 💾 **Export & Import**: Export and import your encrypted store
 - 🔍 **Quick Access**: Retrieve secrets instantly when needed
 - 🚫 **Offline-First**: No internet connection required
 - 💻 **Cross-Platform**: Works on Windows, macOS, and Linux
+- 💾 **Backups**: Create and manage backups
+- 🔄 **Easy Restore**: Restore from any previous backup with a single command
 
 ## Installation
 
@@ -256,6 +262,56 @@ Options:
 - `-m, --merge`: Merge secrets from import file into existing store (interactive)
 
 **Warning:** Without the `-m` flag, this will replace your current store with the imported one. Make sure you have a backup if needed.
+
+## Backup and Restore
+
+vlxck provides robust backup and restore functionality to keep your data safe.
+
+### Create a Backup
+
+Create a compressed backup of your entire password store:
+
+```bash
+# Create a backup in the default location (~/.vlxck/backups/)
+vlxck backup
+
+# Create a backup in a specific directory
+vlxck backup /path/to/backup/directory
+```
+
+Backups are stored as timestamped zip archives (e.g., `backup_20250620-183238.zip`).
+
+### List Available Backups
+
+View all available backups with their sizes and creation times:
+
+```bash
+# List backups in the default location
+vlxck list-backups
+
+# List backups in a specific directory
+vlxck list-backups /path/to/backup/directory
+```
+
+### Restore from Backup
+
+Restore your password store from a previous backup:
+
+```bash
+# Interactive mode - choose from a list of available backups
+vlxck restore -i
+
+# Restore a specific backup file
+vlxck restore /path/to/backup/backup_20250620-183238.zip
+
+# Restore to a specific directory
+vlxck restore -i /custom/restore/path
+```
+
+Options:
+- `-i, --interactive`: Show an interactive menu to select from available backups
+- `[backup-file]`: Path to a specific backup file to restore from
+- `[target-dir]`: (Optional) Directory to restore the backup to (default: ~/.vlxck)
 
 ## Security
 
