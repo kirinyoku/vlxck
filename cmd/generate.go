@@ -12,25 +12,30 @@ import (
 
 // generateCmd represents the 'generate' command that allows users to generate random passwords.
 // It prompts the user for the password length and whether to include symbols and numbers.
-// If the password is successfully generated, it displays the generated password.
+// If the password is successfully generated, it copies it to the clipboard.
 //
 // The command requires the following flags:
 //   - length (-l): The desired length of the password
 //   - symbols (-s): Whether to include special characters (!@#$%^&*()-_=+)
-//   - numbers (-n): Whether to include digits (0123456789)
+//   - digits (-d): Whether to include digits (0123456789)
 var generateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate a random password",
 	Run: func(cmd *cobra.Command, args []string) {
 		length, _ := cmd.Flags().GetInt("length")
 		symbols, _ := cmd.Flags().GetBool("symbols")
-		numbers, _ := cmd.Flags().GetBool("numbers")
-		password, err := utils.GeneratePassword(length, symbols, numbers)
+		digits, _ := cmd.Flags().GetBool("digits")
+		password, err := utils.GeneratePassword(length, symbols, digits)
 		if err != nil {
 			fmt.Println("Error generating password:", err)
 			return
 		}
-		fmt.Printf("Generated password: %s\n", password)
+		err = utils.CopyToClipboard(password)
+		if err != nil {
+			fmt.Printf("Generated password: %s (clipboard error: %v)\n", password, err)
+			return
+		}
+		fmt.Println("Password generated and copied to clipboard.")
 	},
 }
 
@@ -38,7 +43,7 @@ func init() {
 	rootCmd.AddCommand(generateCmd)
 
 	// Define command flags with shorthand and descriptions
-	generateCmd.Flags().IntP("length", "l", 12, "Length of the password")
+	generateCmd.Flags().IntP("length", "l", 16, "Length of the password")
 	generateCmd.Flags().BoolP("symbols", "s", false, "Include symbols")
-	generateCmd.Flags().BoolP("numbers", "n", false, "Include numbers")
+	generateCmd.Flags().BoolP("digits", "d", false, "Include digits")
 }

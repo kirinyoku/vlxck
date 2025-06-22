@@ -177,14 +177,14 @@ vlxck list -c websites
 ### Generate a Strong Password
 
 ```bash
-# Generate a 16-character password with symbols and numbers
-vlxck generate -l 16 -s -n
+# Generate a 24-character password with symbols and digits
+vlxck generate -sdl 24
 ```
 
 Options:
-- `-l, --length`: Length of the password (default: 12)
+- `-l, --length`: Length of the password (default: 16)
 - `-s, --symbols`: Include special characters
-- `-n, --numbers`: Include digits
+- `-d, --digits`: Include digits
 
 ### Delete a Secret
 
