@@ -3,10 +3,7 @@
 package store
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -55,50 +52,30 @@ func LoadStore(filePath, password string) (*Store, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			fmt.Printf("Debug: Store file %s does not exist, returning empty store\n", filePath)
-			return &Store{Secrets: []Secret{}}, nil
+			return &Store{Secrets: []Secret{}}, fmt.Errorf("store file %s does not exist", filePath)
 		}
 		return nil, fmt.Errorf("failed to read store: %v", err)
 	}
 
-	fmt.Printf("Debug: Store file %s size: %d bytes\n", filePath, len(data))
 	if len(data) == 0 {
-		fmt.Println("Debug: Store file is empty, returning empty store")
-		return &Store{Secrets: []Secret{}}, nil
+		return &Store{Secrets: []Secret{}}, fmt.Errorf("store file %s is empty", filePath)
 	}
 
-	key := sha256.Sum256([]byte(password))
-	block, err := aes.NewCipher(key[:])
+	salt := data[:16]
+	nonce := data[16:28]
+	encrypted := data[28:]
+	key := crypto.DeriveKey(password, salt)
+
+	plaintext, err := crypto.Decrypt(encrypted, key, nonce)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create cipher: %v", err)
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create GCM: %v", err)
-	}
-
-	nonceSize := gcm.NonceSize()
-	if len(data) < nonceSize {
-		return nil, fmt.Errorf("invalid data length: expected at least %d bytes, got %d", nonceSize, len(data))
-	}
-
-	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
-	if len(ciphertext) == 0 {
-		return nil, fmt.Errorf("invalid ciphertext: empty after nonce")
-	}
-
-	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decrypt: %v", err)
+		return nil, err
 	}
 
 	var store Store
 	if err := json.Unmarshal(plaintext, &store); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal store: %v", err)
+		return nil, err
 	}
 
-	fmt.Printf("Debug: Loaded store with %d secrets\n", len(store.Secrets))
 	return &store, nil
 }
 
