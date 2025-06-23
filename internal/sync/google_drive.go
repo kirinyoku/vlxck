@@ -79,7 +79,7 @@ func getClientCredentials(cfg *config.Config, masterPassword string) (string, st
 	}
 
 	fmt.Println("Google Drive API credentials are required for synchronization.")
-	fmt.Println("Please follow the instructions in https://github.com/kirinyoku/vlxck/blob/main/README.md#configuring-google-drive-sync to obtain your Client ID and Client Secret.")
+	fmt.Println("Please follow the instructions in https://github.com/kirinyoku/vlxck/blob/main/README.md#setting-up-google-cloud-project to obtain your Client ID and Client Secret.")
 
 	for {
 		clientID, err := utils.PromptForInput("Enter Client ID: ", "", func(input string) error {
@@ -239,15 +239,32 @@ func InitGoogleDrive(ctx context.Context, masterPassword string) (*config.Config
 			return nil, fmt.Errorf("failed to create drive service: %v", err)
 		}
 
-		file := &drive.File{
-			Name:    "store.dat",
-			Parents: []string{"root"},
-		}
-		createdFile, err := driveService.Files.Create(file).Media(bytes.NewReader([]byte{})).Do()
+		fmt.Println("Searching for existing store.dat in Google Drive...")
+		query := "name='store.dat' and 'root' in parents and trashed=false"
+		files, err := driveService.Files.List().Q(query).Spaces("drive").Fields("files(id, name, size)").Do()
 		if err != nil {
-			return nil, fmt.Errorf("failed to create file: %v", err)
+			return nil, fmt.Errorf("failed to list files in Google Drive: %v", err)
 		}
-		cfg.Sync.FileID = createdFile.Id
+
+		var fileId string
+		if len(files.Files) > 0 {
+			fileId = files.Files[0].Id
+			fmt.Printf("Found existing store.dat with FileID: %s (size: %d bytes)\n", fileId, files.Files[0].Size)
+		} else {
+			fmt.Println("No existing store.dat found. Creating a new one...")
+
+			file := &drive.File{
+				Name:    "store.dat",
+				Parents: []string{"root"},
+			}
+			createdFile, err := driveService.Files.Create(file).Media(bytes.NewReader([]byte{})).Do()
+			if err != nil {
+				return nil, fmt.Errorf("failed to create file: %v", err)
+			}
+			fileId = createdFile.Id
+			fmt.Printf("Created new store.dat with FileID: %s\n", fileId)
+		}
+		cfg.Sync.FileID = fileId
 
 		fmt.Printf("Saving config with FileID: %s, Provider: %s\n", cfg.Sync.FileID, cfg.Sync.Provider)
 		if err := config.SaveConfig(cfg); err != nil {

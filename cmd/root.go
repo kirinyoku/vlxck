@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	Version      = "0.8.0"         // Version of the application
+	Version      = "0.8.1"         // Version of the application
 	cacheTimeout = 5 * time.Minute // Fixed 5-minute cache timeout
 )
 
