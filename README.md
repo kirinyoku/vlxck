@@ -26,7 +26,12 @@ vlxck is a secure, lightweight command-line password manager that helps you stor
     - [Create a Backup](#create-a-backup)
     - [List Available Backups](#list-available-backups)
     - [Restore from Backup](#restore-from-backup)
+  - [Synchronization with Google Drive](#synchronization-with-google-drive)
+    - [Setting Up Google Cloud Project](#setting-up-google-cloud-project)
+    - [Configuring Google Drive Sync](#configuring-google-drive-sync)
+    - [Using Google Drive Sync](#using-google-drive-sync)
 - [Security](#security)
+- [Password Caching](#password-caching)
 - [License](#license)
 - [Contributing](#contributing)
 
@@ -43,6 +48,7 @@ vlxck is a secure, lightweight command-line password manager that helps you stor
 - 💻 **Cross-Platform**: Works on Windows, macOS, and Linux
 - 💾 **Backups**: Create and manage backups
 - 🔄 **Easy Restore**: Restore from any previous backup with a single command
+- 📤 **Synchronization with Google Drive**: Synchronize your encrypted store with Google Drive
 
 ## Installation
 
@@ -312,6 +318,75 @@ Options:
 - `-i, --interactive`: Show an interactive menu to select from available backups
 - `[backup-file]`: Path to a specific backup file to restore from
 - `[target-dir]`: (Optional) Directory to restore the backup to (default: ~/.vlxck)
+
+## Synchronization with Google Drive
+
+vlxck supports synchronizing your encrypted password store with Google Drive, allowing you to access your passwords across multiple devices securely.
+
+### Setting Up Google Cloud Project
+
+Before you can use Google Drive sync, you need to create a Google Cloud Project and obtain OAuth 2.0 credentials:
+
+1. **Go to the [Google Cloud Console](https://console.cloud.google.com/)**
+2. **Create a new project** or select an existing one
+3. **Enable the Google Drive API**:
+   - In the left sidebar, click on "APIs & Services" > "Library"
+   - Search for "Google Drive API" and enable it
+4. **Configure the OAuth consent screen**:
+   - Go to "APIs & Services" > "OAuth consent screen"
+   - Select "External" and click "Create"
+   - Fill in the required app information (app name, user support email, developer contact)
+   - Click "Save and Continue"
+   - Add the following scopes:
+     - `https://www.googleapis.com/auth/drive.file` (View and manage Google Drive files and folders that you have opened or created with this app)
+   - Add test users (your Google account)
+   - Click "Save and Continue" and then "Back to Dashboard"
+5. **Create OAuth 2.0 credentials**:
+   - Go to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "OAuth client ID"
+   - Select "Desktop app" as the application type
+   - Click "Create"
+   - Note down the Client ID and Client Secret (you'll need these later)
+
+### Configuring Google Drive Sync
+
+To set up Google Drive sync in vlxck, follow these steps:
+
+1. Run the sync initialization command:
+   ```bash
+   vlxck sync --init
+   ```
+
+2. You'll be prompted to enter your Client ID and Client Secret (obtained from the Google Cloud Console).
+   - The Client ID should look like: `123456789012-abcdefghi1234567890abcdefghijklmn.apps.googleusercontent.com` (this isn't real Client ID, it's just an example)
+   - The Client Secret is a longer string of characters
+
+3. After entering the credentials, visit the URL provided in the terminal to open the Google sign-in page.
+   - Sign in with your Google account, which you have set up as a test user in Google Cloud Console
+   - Click "Allow" to grant vlxck permission to access your Google Drive
+
+4. Once authorized, the OAuth flow will complete and your credentials will be securely stored in the vlxck configuration (~/.vlxck/config.yaml).
+
+### Using Google Drive Sync
+
+After setting up Google Drive sync, you can use the following commands:
+
+- **Push local changes to Google Drive**:
+  ```bash
+  vlxck sync -m push
+  ```
+
+- **Pull changes from Google Drive**:
+  ```bash
+  vlxck sync -m pull
+  ```
+
+### Security Notes
+
+- Your Google API credentials are encrypted with your master password before being stored
+- The OAuth token only grants access to files created by vlxck (`drive.file` scope)
+- Your master password is never sent to Google - only the encrypted store file is synchronized
+- The sync process is end-to-end encrypted - Google only sees the encrypted data
 
 ## Security
 

@@ -5,6 +5,9 @@ package utils
 
 import (
 	"bufio"
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/rand"
 	"errors"
 	"fmt"
@@ -353,4 +356,81 @@ func PromptForCategoryFilter(categories []string) (string, error) {
 	}
 	items := append([]string{"All categories"}, categories...)
 	return PromptForSelect("Select category to filter", items)
+}
+
+// EncryptFile encrypts a file using AES-GCM
+//
+// Parameters:
+//   - data: The data to encrypt
+//   - password: The password to use for encryption
+//
+// Returns:
+//   - The encrypted data
+//   - An error if encryption fails
+func EncryptFile(data []byte, password string) ([]byte, error) {
+	if password == "" {
+		return data, nil
+	}
+
+	key := []byte(password)
+	if len(key) < 32 {
+		key = append(key, bytes.Repeat([]byte{0}, 32-len(key))...)
+	} else {
+		key = key[:32]
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	nonce := make([]byte, 12)
+	if _, err := rand.Read(nonce); err != nil {
+		return nil, err
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	ciphertext := aesgcm.Seal(nil, nonce, data, nil)
+	return append(nonce, ciphertext...), nil
+}
+
+// DecryptFile decrypts a file using AES-GCM
+//
+// Parameters:
+//   - data: The data to decrypt
+//   - password: The password to use for decryption
+//
+// Returns:
+//   - The decrypted data
+//   - An error if decryption fails
+func DecryptFile(data []byte, password string) ([]byte, error) {
+	if len(data) < 12 {
+		return data, nil
+	}
+
+	key := []byte(password)
+	if len(key) < 32 {
+		key = append(key, bytes.Repeat([]byte{0}, 32-len(key))...)
+	} else {
+		key = key[:32]
+	}
+
+	nonce := data[:12]
+	ciphertext := data[12:]
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	return aesgcm.Open(nil, nonce, ciphertext, nil)
 }
